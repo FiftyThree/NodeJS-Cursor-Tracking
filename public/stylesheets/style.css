@@ -29,3 +29,10 @@ a {
   padding: 1px;
   font-size: 10px;
 }
+.hidden {
+  display: none;
+}
+.surprise {
+  padding: 1em;
+  background: #ffc0cb;
+}

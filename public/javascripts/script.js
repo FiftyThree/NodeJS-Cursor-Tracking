@@ -27,12 +27,18 @@
             $(document).on( 'click', {PlayerObj:this}, (function(event) {
                 var player = event.data.PlayerObj;
                 // var selector = $(event.target).attr('class');
-                var selector = $(event.target).attr('data-element');
+                var selector = $(event.target).attr('data-element'); // older-style, but OK for now
                 console.log('emitting click', selector);
                 socket.emit('click',{ friend: player.id, elementToClick: selector });
             }));
 
+
+            $( "[data-element='button2']" ).click(function() {
+                $( "div.hideable" ).toggleClass('hidden');
+                // alert( "Handler for .click() called." );
+            });
         };
+
         return {
             init: init
         };
@@ -122,11 +128,13 @@
         },
         click = function(elementToClick, id) {
             // .data("id")
-            var clickableElement =  "[data-element='" + elementToClick +  "']";
+            var clickableElement =  `[data-element='${elementToClick}']`;
             console.log('synthetically clicking', clickableElement);
             console.log('via player', id);
-            // This will send and receive forever across all players without some
-            // concept of who's broadcasting and who's listening:
+
+            // This will send and receive forever across all connected players
+            // without some concept of who's broadcasting and who's listening
+            // (see below for playerId check):
             if (elementToClick) { $( clickableElement ).trigger( "click" ); }
         };
         return {
@@ -181,15 +189,30 @@
                     self.friends.update(data);
                 });
 
-                // Friend click
+                // Handle inbound clicks from friends:
                 socket.on('click', function (data) {
-                    // console.log('friends', self.friends);
-                    console.log('player ID', self.player.id);
-                    console.log('data friend', data.friend);
+                    var friendIds = []
 
-                    // Only do anything with the click if the 'friend' has the lowest
-                    // index among all participants (including yourself):
-                    if (data.friend < self.player.id) {
+                    $.each(self.friends, function(key, value){
+                        if (key === 'friends') {
+                            // console.log( key, value );
+
+                            $.each(value, function(k, v) {
+                                friendIds.push(v.id);
+                            });
+                        }
+                    });
+
+                    // console.log('friend IDs', friendIds);
+                    // console.log('player ID', self.player.id);
+                    // console.log('data friend', data.friend);
+                    // Only do anything with the click if it's from the 'friend' with the
+                    // the lowest index among all participants (including yourself):
+
+                    // assumes friendIds is already in ascending order:
+                    // console.log('friendIds', friendIds)
+                    // console.log('data.friend', data.friend)
+                    if (friendIds[0] === data.friend && self.player.id > data.friend) {
                         console.log('passing click into friends function');
                         self.friends.click(data);
                     }
