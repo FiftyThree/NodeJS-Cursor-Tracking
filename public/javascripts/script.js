@@ -1,7 +1,7 @@
 (function($){
 
     var socket = io.connect(document.location.origin);
-  
+
     // Player
 
     var Player = function(id) {
@@ -11,7 +11,7 @@
         this.name = '';
         this.init();
     };
-    
+
     Player.prototype = function(){
         var init = function(){
             bind.call(this);
@@ -23,6 +23,15 @@
                 player.y = ((event.pageY / $(window).height()) * 100).toFixed(2);
                 socket.emit('move',{ friend: player.id, friendX: player.x, friendY: player.y});
             }));
+
+            $(document).on( 'click', {PlayerObj:this}, (function(event) {
+                var player = event.data.PlayerObj;
+                // var selector = $(event.target).attr('class');
+                var selector = $(event.target).attr('data-element');
+                console.log('emitting click', selector);
+                socket.emit('click',{ friend: player.id, elementToClick: selector });
+            }));
+
         };
         return {
             init: init
@@ -53,13 +62,20 @@
                     this.friends[label].update(data.friendX,data.friendY);
                 }
             },
+            click = function(data) {
+                var label = doLabel.call(this,data.friend);
+                if ( this.friends[label] ) {
+                    this.friends[label].click(data.elementToClick, data.friend);
+                }
+            },
             doLabel = function(id){
                 return 'friend-'+id;
             };
         return {
             add: add,
             remove: remove,
-            update: update
+            update: update,
+            click: click
         };
     }();
 
@@ -75,6 +91,7 @@
         this.name = '';
         this.element = false;
         this.init();
+        this.elementToClick = null;
     };
 
     Friend.prototype = function(){
@@ -102,11 +119,24 @@
         },
         update = function(x,y) {
             this.element.css({'left':x+'%','top':y+'%'});
+        },
+        click = function(elementToClick, id) {
+            // this.element.css({'left':x+'%','top':y+'%'});
+            // console.log('synthetically clicking', elementToClick);
+            // "input[value='Hot Fuzz']"
+            // .data("id")
+            var clickableElement =  "[data-element='" + elementToClick +  "']";
+            console.log('synthetically clicking', clickableElement);
+            console.log('via player', id);
+            // This will send and receive forever across all players without some
+            // concept of who's broadcasting and who's listening:
+            // if (elementToClick) { $( clickableElement ).trigger( "click" ); }
         };
         return {
             init: init,
             remove: remove,
-            update: update
+            update: update,
+            click: click
         };
     }();
 
@@ -117,7 +147,7 @@
         this.friends = new Friends();
         this.init();
     };
-    
+
     Meeting.prototype = function(){
         var init = function(){
                 bind.call(this);
@@ -143,7 +173,7 @@
                     createFriend.call(self,data.friend);
                 });
 
-                // Friend gonne
+                // Friend gone
                 socket.on('bye friend', function (data) {
                     updateTotalConnections(data.connections);
                     removeFriend.call(self,data.friend);
@@ -152,6 +182,11 @@
                 // Friend move
                 socket.on('move', function (data) {
                     self.friends.update(data);
+                });
+
+                // Friend click
+                socket.on('click', function (data) {
+                    self.friends.click(data);
                 });
 
             },
