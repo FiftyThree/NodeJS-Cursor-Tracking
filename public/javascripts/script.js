@@ -121,16 +121,13 @@
             this.element.css({'left':x+'%','top':y+'%'});
         },
         click = function(elementToClick, id) {
-            // this.element.css({'left':x+'%','top':y+'%'});
-            // console.log('synthetically clicking', elementToClick);
-            // "input[value='Hot Fuzz']"
             // .data("id")
             var clickableElement =  "[data-element='" + elementToClick +  "']";
             console.log('synthetically clicking', clickableElement);
             console.log('via player', id);
             // This will send and receive forever across all players without some
             // concept of who's broadcasting and who's listening:
-            // if (elementToClick) { $( clickableElement ).trigger( "click" ); }
+            if (elementToClick) { $( clickableElement ).trigger( "click" ); }
         };
         return {
             init: init,
@@ -186,7 +183,16 @@
 
                 // Friend click
                 socket.on('click', function (data) {
-                    self.friends.click(data);
+                    // console.log('friends', self.friends);
+                    console.log('player ID', self.player.id);
+                    console.log('data friend', data.friend);
+
+                    // Only do anything with the click if the 'friend' has the lowest
+                    // index among all participants (including yourself):
+                    if (data.friend < self.player.id) {
+                        console.log('passing click into friends function');
+                        self.friends.click(data);
+                    }
                 });
 
             },
