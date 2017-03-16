@@ -43,6 +43,7 @@ var totalUsers = 0,
     friendsGroup = [];
 
 io.sockets.on('connection', function (socket) {
+  console.log('woo hoo! about to perform socket setup')
   // new id
   var thisID = getID();
   // step users++
