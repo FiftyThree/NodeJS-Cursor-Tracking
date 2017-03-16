@@ -2,7 +2,7 @@
     "name": "cursor-test"
   , "version": "0.0.1"
   , "private": true
-  "scripts": {
+  , "scripts": {
     "start": "node app.js"
   }
   , "dependencies": {
