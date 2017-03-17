@@ -66,13 +66,31 @@ io.sockets.on('connection', function (socket) {
   });
   // mouse click
   socket.on('click', function(data){
-      socket.broadcast.emit('click', data);
+      // console.log('click data', data);
+
+      // Check data.userId against list of drivers; only pass if isDriver = true;
+      // console.log('usersGroup from click', data);
+      var shouldPostClick = isUserDriving(thisID, data.userId);
+      console.log('shouldPostClick', shouldPostClick);
+      if (shouldPostClick) {
+        socket.broadcast.emit('click', data);
+      }
   });
 // mouse click
   socket.on('sendUserId', function(data){
       // console.log('sendUserId data', data )
       console.log('thisID', thisID);
       setUserID(thisID, data.userId);
+  });
+// change in who's driving
+  socket.on('updateDriver', function(data){
+      // console.log('updateDriver', thisID);
+      // console.log('with data', data);
+      checkUserDriver(thisID, data.userId);
+      // updateDriver 1
+      // with data { friend: 6, userId: '7117854', isDriver: true }
+
+      // setUserID(thisID, data.userId);
   });
   //console.log(friendsGroup);
 });
@@ -89,6 +107,75 @@ function setUserID(thisID, userID) {
     usersGroup.push(player);
     console.log('usersGroup', usersGroup);
 }
+
+function checkUserDriver(thisID, userID) {
+  console.log('checkUserDriver userID', userID.toString())
+  // Find and remove item from an array
+  //  var i = usersGroup.indexOf(userID);
+
+  // function findUserId(users, id) {
+  //     return users.userId === id;
+  // }
+
+  // console.log('usersGroup find', usersGroup.find( findUserId(userId) ));
+
+  usersGroup.forEach(function(element, index) {
+
+      // console.log('element.userID', element.userID)
+
+      if (element.userID === userID.toString()) {
+        // console.log('found at index', index)
+        var newDriver = {playerID: thisID, userID: userID, isDriver: true}
+        usersGroup.splice(index, 1, newDriver);
+
+      } else {
+        var newDriver = {playerID: element.playerID, userID: element.userID, isDriver: false}
+        usersGroup.splice(index, 1, newDriver);
+      }
+
+  });
+
+  console.log('final usersGroup', usersGroup);
+  // console.log('i', i);
+
+  // if(i != -1) {
+  //   if (usersGroup[i].isDriver) {
+  //     console.log('user found and is driver')
+  //   } else {
+  //     console.log('user found, but not driver')
+  //   }
+  //   // array.splice(i, 1);
+  // }
+
+}
+
+function isUserDriving(thisID, userID) {
+  // console.log('checkUserDriver userID', userID.toString())
+
+  var foundDriver = false;
+
+  usersGroup.some(function(element, index) {
+      console.log('element.userID', element.userID.toString())
+
+      if (element.userID.toString() === userID && element.isDriver) {
+        console.log('user is driving at index', index)
+        // var newDriver = {playerID: thisID, userID: userID, isDriver: true}
+        // usersGroup.splice(index, 1, newDriver);
+        foundDriver = true;
+        return true;
+      }
+
+      // else {
+      //   return false;
+      // }
+
+  });
+
+  console.log('foundDriver', foundDriver);
+  return foundDriver;
+
+}
+
 
 function addUser(){
     totalUsers++;
