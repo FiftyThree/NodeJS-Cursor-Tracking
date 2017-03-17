@@ -41,6 +41,7 @@ app.get('/', routes.index);
 var totalUsers = 0,
     stepID = 0,
     friendsGroup = [];
+    usersGroup = [];
 
 io.sockets.on('connection', function (socket) {
   console.log('woo hoo! about to perform socket setup')
@@ -60,12 +61,18 @@ io.sockets.on('connection', function (socket) {
       socket.broadcast.emit('bye friend',{connections:totalUsers, friend: thisID});
   });
   // mouse move
-  socket.on('move',function(data){
+  socket.on('move', function(data){
       socket.broadcast.emit('move', data);
   });
   // mouse click
-  socket.on('click',function(data){
+  socket.on('click', function(data){
       socket.broadcast.emit('click', data);
+  });
+// mouse click
+  socket.on('sendUserId', function(data){
+      // console.log('sendUserId data', data )
+      console.log('thisID', thisID);
+      setUserID(thisID, data.userId);
   });
   //console.log(friendsGroup);
 });
@@ -75,6 +82,12 @@ io.sockets.on('connection', function (socket) {
 function getID() {
     friendsGroup.push(++stepID);
     return stepID;
+}
+
+function setUserID(thisID, userID) {
+    var player = {playerID: thisID, userID: userID}
+    usersGroup.push(player);
+    console.log('usersGroup', usersGroup);
 }
 
 function addUser(){
